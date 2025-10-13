@@ -1,0 +1,17 @@
+.next
+node_modules
+.git
+.env*
+.vercel
+.vscode
+.idea
+*.log
+.DS_Store
+Thumbs.db
+__tests__
+*.test.*
+*.spec.*
+coverage
+docs
+*.md
+!README.md
