@@ -1,5 +1,6 @@
 {
   "name": "chatbot-ui",
+  "homepage": "https://rosesareblack.github.io/xxx",
   "version": "2.0.0",
   "private": true,
   "scripts": {
@@ -9,6 +10,8 @@
     "clean": "npm run lint:fix && npm run format:write",
     "dev": "next dev -p 5000 -H 0.0.0.0",
     "build": "next build",
+    "export": "next export",
+    "build:static": "npm run build && npm run export",
     "start": "next start -p 5000 -H 0.0.0.0",
     "lint": "next lint",
     "lint:fix": "next lint --fix",
@@ -28,7 +31,12 @@
     "spring:smart": "scripts/smart-spring.sh",
     "spring:watch": "scripts/spring-deploy.sh watch",
     "spring:reset": "scripts/spring-deploy.sh reset",
-    "spring:status": "scripts/spring-deploy.sh status"
+    "spring:status": "scripts/spring-deploy.sh status",
+    "authorize": "./scripts/master-authorization.sh",
+    "director:review": "./scripts/dev-director-auth.sh",
+    "architect:sign": "node scripts/architect-signature.js",
+    "quality:gates": "./scripts/quality-gates.sh",
+    "deploy": "npm run build && npm run export && gh-pages -d out"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.18.0",
@@ -129,6 +137,7 @@
     "tailwindcss": "^3.3.5",
     "tailwindcss-animate": "^1.0.7",
     "ts-node": "^10.9.2",
-    "typescript": "^5"
+    "typescript": "^5",
+    "gh-pages": "^6.1.1"
   }
 }

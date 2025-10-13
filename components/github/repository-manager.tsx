@@ -1,33 +1,73 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { useSession, signIn, signOut } from 'next-auth/react'
+import { signIn, signOut, useSession } from 'next-auth/react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { GitBranch, GitCommit, GitPullRequest, Settings, ExternalLink, LogIn, LogOut } from 'lucide-react'
+import { AlertCircle, ExternalLink, GitBranch, GitCommit, GitPullRequest, Loader2, LogIn, LogOut, Settings } from 'lucide-react'
+
+interface RepoData {
+  name: string;
+  owner: { login: string };
+  description: string;
+  branches: any[]; // Simplified for example
+  recentCommits: any[]; // Simplified for example
+  pullRequests: any[]; // Simplified for example
+}
 
 export function RepositoryManager() {
   const [repoUrl, setRepoUrl] = useState('')
   const [connected, setConnected] = useState(false)
+  const [repoData, setRepoData] = useState<RepoData | null>(null)
+  const [isLoading, setIsLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
   const { data: session, status } = useSession()
 
   useEffect(() => {
-    if (status === 'authenticated' && repoUrl) {
-      // Here you would typically fetch repo data using the session's accessToken
-      console.log('Fetching data for', repoUrl)
-      setConnected(true)
-    } else {
+    if (status !== 'authenticated') {
       setConnected(false)
+      setRepoData(null)
     }
-  }, [status, repoUrl])
+  }, [status])
 
-  const connectRepository = () => {
-    if (repoUrl) {
-      // In a real app, you'd validate the URL and fetch data
+  const connectRepository = async () => {
+    if (!repoUrl || status !== 'authenticated' || !session?.accessToken) {
+      return
+    }
+
+    const match = repoUrl.match(/github\.com\/([^\/]+)\/([^\/]+)/)
+    if (!match) {
+      setError('Invalid GitHub repository URL.')
+      return
+    }
+
+    const [, owner, repo] = match
+    setIsLoading(true)
+    setError(null)
+
+    try {
+      const res = await fetch(`https://api.github.com/repos/${owner}/${repo}`, {
+        headers: {
+          Authorization: `token ${session.accessToken}`,
+        },
+      })
+
+      if (!res.ok) {
+        throw new Error(`Failed to fetch repository: ${res.statusText}`)
+      }
+
+      const data = await res.json()
+      // In a real app, you'd fetch branches, commits, etc. in separate calls
+      setRepoData({ ...data, branches: [], recentCommits: [], pullRequests: [] })
       setConnected(true)
+    } catch (err: any) {
+      setError(err.message)
+      setRepoData(null)
+    } finally {
+      setIsLoading(false)
     }
   }
 
@@ -87,11 +127,22 @@ export function RepositoryManager() {
                 onChange={(e) => setRepoUrl(e.target.value)}
               />
             </div>
-            <Button onClick={connectRepository} disabled={!repoUrl || status !== 'authenticated'} className="w-full">
-              <GitBranch className="mr-2 h-4 w-4" />
+            <Button onClick={connectRepository} disabled={!repoUrl || status !== 'authenticated' || isLoading} className="w-full">
+              {isLoading ? (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              ) : (
+                <GitBranch className="mr-2 h-4 w-4" />
+              )}
               Connect Repository
             </Button>
           </CardContent>
+          {error && (
+            <CardFooter>
+              <p className="text-sm text-red-500 flex items-center gap-2">
+                <AlertCircle className="h-4 w-4" /> {error}
+              </p>
+            </CardFooter>
+          )}
         </Card>
       ) : (
         <Tabs defaultValue="overview" className="w-full">
@@ -107,27 +158,27 @@ export function RepositoryManager() {
               <Card>
                 <CardHeader>
                   <CardTitle className="flex items-center justify-between">
-                    {mockRepoData.name}
+                    {repoData?.name}
                     <Button variant="outline" size="sm">
                       <ExternalLink className="h-4 w-4" />
                     </Button>
                   </CardTitle>
-                  <CardDescription>{mockRepoData.description}</CardDescription>
+                  <CardDescription>{repoData?.description || 'No description available.'}</CardDescription>
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-2">
                     <div className="flex justify-between">
                       <span className="text-sm text-muted-foreground">Owner:</span>
-                      <span className="text-sm font-medium">{mockRepoData.owner}</span>
+                      <span className="text-sm font-medium">{repoData?.owner.login}</span>
                     </div>
                     <div className="flex justify-between">
                       <span className="text-sm text-muted-foreground">Branches:</span>
-                      <span className="text-sm font-medium">{mockRepoData.branches.length}</span>
+                      <span className="text-sm font-medium">{repoData?.branches.length ?? 0}</span>
                     </div>
                     <div className="flex justify-between">
                       <span className="text-sm text-muted-foreground">Open PRs:</span>
                       <span className="text-sm font-medium">
-                        {mockRepoData.pullRequests.filter(pr => pr.status === 'open').length}
+                        {repoData?.pullRequests.filter(pr => (pr as any).status === 'open').length ?? 0}
                       </span>
                     </div>
                   </div>
