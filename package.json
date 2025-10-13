@@ -22,7 +22,13 @@
     "db-types": "supabase gen types typescript --local > supabase/types.ts",
     "db-pull": "supabase db remote commit",
     "db-push": "supabase db push",
-    "test": "jest"
+    "test": "jest",
+    "spring": "scripts/spring-controller.js",
+    "spring:interactive": "scripts/spring-controller.js interactive",
+    "spring:smart": "scripts/smart-spring.sh",
+    "spring:watch": "scripts/spring-deploy.sh watch",
+    "spring:reset": "scripts/spring-deploy.sh reset",
+    "spring:status": "scripts/spring-deploy.sh status"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.18.0",

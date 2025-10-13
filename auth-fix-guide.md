@@ -80,7 +80,7 @@ const apiConfig = {
 
 **Configure Session Storage**
 ```typescript
-// pages/api/auth/[...nextauth].ts
+// app/api/auth/[...nextauth]/route.ts
 export default NextAuth({
   session: {
     strategy: 'jwt',
@@ -143,7 +143,7 @@ NEXTAUTH_SECRET=your_random_secret_key
 
 **NextAuth Configuration**
 ```typescript
-// pages/api/auth/[...nextauth].ts
+// app/api/auth/[...nextauth]/route.ts
 import NextAuth from 'next-auth';
 import GitHubProvider from 'next-auth/providers/github';
 
@@ -419,4 +419,4 @@ function reportAuthError(error: Error, context: any) {
 - [NextAuth.js Documentation](https://next-auth.js.org/)
 - [GitHub OAuth Documentation](https://docs.github.com/en/developers/apps/building-oauth-apps)
 - [JWT Debugging Tools](https://jwt.io/)
-- [OAuth 2.0 Security Best Practices](https://tools.ietf.org/html/draft-ietf-oauth-security-topics)
+- [OAuth 2.0 Security Best Practices](https://tools.ietf.org/html/draft-ietf-oauth-security-topics)g

@@ -1,19 +1,32 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import { useSession, signIn, signOut } from 'next-auth/react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { GitBranch, GitCommit, GitPullRequest, Settings, ExternalLink } from 'lucide-react'
+import { GitBranch, GitCommit, GitPullRequest, Settings, ExternalLink, LogIn, LogOut } from 'lucide-react'
 
 export function RepositoryManager() {
   const [repoUrl, setRepoUrl] = useState('')
   const [connected, setConnected] = useState(false)
+  const { data: session, status } = useSession()
+
+  useEffect(() => {
+    if (status === 'authenticated' && repoUrl) {
+      // Here you would typically fetch repo data using the session's accessToken
+      console.log('Fetching data for', repoUrl)
+      setConnected(true)
+    } else {
+      setConnected(false)
+    }
+  }, [status, repoUrl])
 
   const connectRepository = () => {
     if (repoUrl) {
+      // In a real app, you'd validate the URL and fetch data
       setConnected(true)
     }
   }
@@ -41,11 +54,22 @@ export function RepositoryManager() {
   return (
     <div className="space-y-6">
       <div className="flex items-center gap-2 mb-4">
-        <GitBranch className="h-5 w-5 text-green-500" />
+        <GitBranch className={`h-5 w-5 ${status === 'authenticated' ? 'text-green-500' : 'text-gray-500'}`} />
         <span className="font-semibold">Repository Management</span>
-        <Badge variant={connected ? 'default' : 'secondary'}>
-          {connected ? 'Connected' : 'Disconnected'}
+        <Badge variant={status === 'authenticated' ? 'default' : 'secondary'}>
+          {status === 'loading' ? 'Loading...' : status === 'authenticated' ? 'Authenticated' : 'Unauthenticated'}
         </Badge>
+        {status === 'authenticated' ? (
+          <Button variant="outline" size="sm" onClick={() => signOut()} className="ml-auto">
+            <LogOut className="mr-2 h-4 w-4" />
+            Sign Out
+          </Button>
+        ) : (
+          <Button variant="outline" size="sm" onClick={() => signIn('github')} className="ml-auto">
+            <LogIn className="mr-2 h-4 w-4" />
+            Sign In with GitHub
+          </Button>
+        )}
       </div>
 
       {!connected ? (
@@ -63,7 +87,7 @@ export function RepositoryManager() {
                 onChange={(e) => setRepoUrl(e.target.value)}
               />
             </div>
-            <Button onClick={connectRepository} disabled={!repoUrl} className="w-full">
+            <Button onClick={connectRepository} disabled={!repoUrl || status !== 'authenticated'} className="w-full">
               <GitBranch className="mr-2 h-4 w-4" />
               Connect Repository
             </Button>
